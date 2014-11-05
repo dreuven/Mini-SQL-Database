@@ -1,0 +1,92 @@
+package db61b;
+import org.junit.Test;
+import static org.junit.Assert.*;
+
+/** Basic Testing: 
+ *  Tests basic functionality including:
+ *  	1. The row class
+ *  @Doron Reuven
+ */
+
+
+public class BasicTests{
+	@Test
+	public void testRowSize(){
+		Row a = new Row(new String[]{});
+		Row r = new Row(new String[]{"Josh", "is", "writing", "this", "test."});
+		assertEquals(5, r.size());
+		assertEquals(0, a.size());
+	}
+
+	@Test
+	public void testRowEqualsMethod(){
+		Row a = new Row(new String[]{});
+		Row b = new Row(new String[]{});
+		Row c = new Row(new String[] {"all","day","long"});
+		Row d = new Row(new String[] {"all","day","long"});
+		Row e = new Row(new String[] {"same","as","above"});
+		assertEquals(true, a.equals(b));
+		assertEquals(false, c.equals(a));
+		assertEquals(true, c.equals(d));
+		assertEquals(false, e.equals(d));
+	}
+
+	@Test
+	public void testOfGetFromRow(){
+		Row c = new Row(new String[] {"all","day","long"});
+		assertEquals("all", c.get(0));
+		assertEquals("long", c.get(2));
+
+	}
+
+	@Test
+	public void testSizeofColumnsfromTable(){
+		Table t = new Table(new String[]{"Person", "Grade", "Interest"});
+		Table m = new Table(new String[]{});
+		assertEquals(3, t.columns());
+		assertEquals(0, m.columns());
+	}
+
+	@Test
+	public void testGetTitleofTable(){
+		Table t = new Table(new String[]{"Person", "Grade", "Interest"});
+		Table m = new Table(new String[]{"Personal", "Gradepointavg", "Interesting llamas"});
+		assertEquals("Grade", t.getTitle(1));
+		assertEquals("Interest", t.getTitle(2));
+		assertEquals("Personal", m.getTitle(0));
+
+	}
+
+	@Test
+	public void testFindColumnfromTable(){
+		Table t = new Table(new String[]{"Person", "Grade", "Interest"});
+		Table m = new Table(new String[]{"Personal", "Gradepointavg", "Interesting llamas"});
+		assertEquals(0, t.findColumn("Person"));
+		assertEquals(1, t.findColumn("Grade"));
+		assertEquals(2, m.findColumn("Interesting llamas"));
+		assertEquals(-1, t.findColumn("Never gonna find me"));
+	}
+
+	@Test
+	public void testForAddingRowToATable(){
+		Table m = new Table(new String[]{});
+		Row c = new Row(new String[] {"all","day","long"});
+		Row a = new Row(new String[] {"almost","there","yo"});
+		Row b = new Row(new String[]{});
+		m.add(a);
+		m.add(b);
+		assertEquals(true, m.add(c));
+		assertEquals(false, m.add(a));
+		assertEquals(false, m.add(b));
+		m.print();
+
+	}
+
+
+	
+
+	public static void main(String[] args){
+		System.exit(ucb.junit.textui.runClasses(BasicTests.class));
+
+	}
+}

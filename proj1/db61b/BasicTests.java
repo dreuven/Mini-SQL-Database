@@ -1,0 +1,206 @@
+package db61b;
+import org.junit.Test;
+import static org.junit.Assert.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import static db61b.Utils.*;
+/** Basic Testing:
+ *  Tests basic functionality:
+ *  @Doron Reuven
+ */
+
+
+public class BasicTests {
+    @Test
+    public void testRowSize() {
+        Row r = new Row(new String[]{"Josh", "is", "writing", "this", "test."});
+        assertEquals(5, r.size());
+        Row a = new Row(new String[]{"Josh"});
+        assertEquals(1, a.size());
+
+    }
+
+    @Test(expected = DBException.class)
+    public void testExceptionofGetFromRow() {
+        Row r = new Row(new String[]{"Josh", "is", "writing", "this", "test."});
+        r.get(-300);
+        r.get(30000);
+    }
+
+    @Test
+    public void testRowEqualsMethod() {
+        Row c = new Row(new String[] {"all", "day", "long"});
+        Row d = new Row(new String[] {"all", "day", "long"});
+        Row e = new Row(new String[] {"same", "as", "above"});
+        assertEquals(true, c.equals(d));
+        assertEquals(false, e.equals(d));
+    }
+
+    @Test
+    public void testOfGetFromRow() {
+        Row c = new Row(new String[] {"all", "day", "long"});
+        assertEquals("all", c.get(0));
+        assertEquals("long", c.get(2));
+
+    }
+
+    @Test
+    public void testSizeofColumnsfromTable() {
+        Table t = new Table(new String[]{"Person", "Grade", "Interest"});
+        assertEquals(3, t.columns());
+        Table a = new Table(new String[]{"P", "G", "In", "One More Column"});
+        assertEquals(4, a.columns());
+    }
+
+    @Test
+    public void testGetTitleofTable() {
+        Table t = new Table(new String[]{"Person", "Grade", "Interest"});
+        Table m = new Table(new String[]{"Personal", "GPA", "llamas"});
+        assertEquals("Grade", t.getTitle(1));
+        assertEquals("Interest", t.getTitle(2));
+        assertEquals("Personal", m.getTitle(0));
+
+    }
+    @Test
+    public void testDatabasePutandGetMethod() {
+        Database data = new Database();
+        Table t = new Table(new String[]{"Person", "Grade", "Interest"});
+        Table m = new Table(new String[]{"Personal", "GPA", "llamas"});
+        data.put("Boring", t);
+        data.put("SecondTable", m);
+        assertEquals(t, data.get("Boring"));
+        assertEquals(m, data.get("SecondTable"));
+        assertEquals(null, data.get("Never gonna find me slim"));
+    }
+
+    @Test
+    public void testfindColumnfromTable() {
+        Table t = new Table(new String[]{"Person", "Grade", "Interest"});
+        Table m = new Table(new String[]{"Personal", "GPA", "llamas"});
+        assertEquals(0, t.findColumn("Person"));
+        assertEquals(1, t.findColumn("Grade"));
+        assertEquals(2, m.findColumn("llamas"));
+        assertEquals(-1, t.findColumn("Never gonna find me"));
+    }
+    @Test
+    public void testForAddingRowToATable() {
+        String[] columntitles = new String[3];
+        columntitles[0] = "Names";
+        columntitles[1] = "Games";
+        columntitles[2] = "EveryoneNamedJames";
+        Table m = new Table(columntitles);
+        Row a = new Row(new String[] {"all", "day", "long"});
+        Row b = new Row(new String[] {"almost", "there", "yo"});
+        assertTrue(m.add(a));
+        assertTrue(m.add(b));
+        assertEquals(false, m.add(a));
+    }
+    @Test
+    public void readWrite() {
+        Table table = Table.readTable("testing/students");
+        table.writeTable("testOfStudents");
+        Table testTable = Table.readTable("testOfStudents");
+        Iterator<Row> iterTable = table.iterator();
+        Iterator<Row> iterTestTable = testTable.iterator();
+        while (iterTable.hasNext()) {
+            Row row1 = iterTable.next();
+            Row row2 = iterTestTable.next();
+            assertTrue(row1.equals(row2));
+        }
+    }
+
+    @Test
+    public void testSingleSelectWithandWithoutConditions() {
+        Table old = new Table(new String[]{"Words", "Phrases", "Sentences"});
+        Row b1 = new Row(new String[] {"all", "day", "longer"});
+        Row b2 = new Row(new String[] {"almost", "there", "yo"});
+        old.add(b1);
+        old.add(b2);
+        Table newtable = new Table(new String[]{"Words", "Phrases"});
+        Row a1 = new Row(new String[] {"all", "day"});
+        Row a2 = new Row(new String[] {"almost", "there"});
+        newtable.add(a1);
+        newtable.add(a2);
+        ArrayList<String> titlesofinterest = new ArrayList<String>();
+        titlesofinterest.add("Words");
+        titlesofinterest.add("Phrases");
+        Table m = old.select(titlesofinterest, null);
+        Iterator<Row> iter1 = m.iterator();
+        Iterator<Row> iter2 = newtable.iterator();
+        while (iter1.hasNext()) {
+            Row rowofm = iter1.next();
+            Row rowofnewtable = iter2.next();
+            assertTrue(rowofm.equals(rowofnewtable));
+        }
+        ArrayList<Condition> conditions = new ArrayList<Condition>();
+        Column col1 = new Column("Words", old);
+        Condition cond1 = new Condition(col1, "=", "almost");
+        conditions.add(cond1);
+        Column col2 = new Column("Sentences", old);
+        Condition cond2 = new Condition(col2, "!=", "longer");
+        conditions.add(cond2);
+        Table conditionedTable = old.select(titlesofinterest, conditions);
+        Table checkingCondsWorkTable = new Table(titlesofinterest);
+        String[] rowEntriesAfterCond = new String[2];
+        rowEntriesAfterCond[0] = "almost";
+        rowEntriesAfterCond[1] = "there";
+        Row rowAfterCondsApplied = new Row(rowEntriesAfterCond);
+        checkingCondsWorkTable.add(rowAfterCondsApplied);
+        Iterator<Row> iterCondTable = conditionedTable.iterator();
+        Iterator<Row> iterCheckTable = checkingCondsWorkTable.iterator();
+        while (iterCondTable.hasNext()) {
+            Row row1 = iterCondTable.next();
+            Row row2 = iterCheckTable.next();
+            assertTrue(row1.equals(row2));
+        }
+    }
+    @Test
+    public void testTwoTablesWithConditions() {
+        Table a = Table.readTable("testing/students");
+        Table b = Table.readTable("testing/enrolled");
+        ArrayList<String> columnNames = new ArrayList<String>();
+        ArrayList<Condition> conditions = new ArrayList<Condition>();
+        Column colCCN = new Column("CCN", a, b);
+        Condition cond1 = new Condition(colCCN, "=", "21001");
+        conditions.add(cond1);
+        String name1 = "Firstname";
+        String name2 = "Lastname";
+        String name3 = "Grade";
+        columnNames.add(name1);
+        columnNames.add(name2);
+        columnNames.add(name3);
+        Table c = a.select(b, columnNames, conditions);
+        String[] columntitles2 = new String[3];
+        String columnName1 = "Firstname";
+        String columnName2 = "Lastname";
+        String columnName3 = "Grade";
+        columntitles2[0] = columnName1;
+        columntitles2[1] = columnName2;
+        columntitles2[2] = columnName3;
+        Table d = new Table(columntitles2);
+        String[] row1Str = new String[]{"Jason", "Knowles", "B"};
+        String[] row2Str = new String[]{"Shana", "Brown", "B+"};
+        String[] row3Str = new String[]{"Yangfan", "Chan", "B"};
+        String[] row4Str = new String[]{"Valerie", "Chan", "B+"};
+        Row row1 = new Row(row1Str);
+        Row row2 = new Row(row2Str);
+        Row row3 = new Row(row3Str);
+        Row row4 = new Row(row4Str);
+        d.add(row1);
+        d.add(row2);
+        d.add(row3);
+        d.add(row4);
+        Iterator<Row> iterC = c.iterator();
+        Iterator<Row> iterD = d.iterator();
+        while (iterC.hasNext()) {
+            Row currC = iterC.next();
+            Row currD = iterD.next();
+            assertTrue(currC.equals(currD));
+        }
+    }
+
+    public static void main(String[] args) {
+        System.exit(ucb.junit.textui.runClasses(BasicTests.class));
+
+    }
+}
